@@ -3,396 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chill Accumulation Dashboard</title>
+    <title>Advanced Chill Accumulation Monitor</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Lora:wght@700&display=swap" rel="stylesheet">
-    
     <style>
-        :root {
-            --primary-green: #4c7c5c;
-            --dark-green: #355e3b;
-            --light-bg: #f5f7f5;
-            --white: #ffffff;
-            --text-main: #333333;
-            --text-secondary: #666666;
-            --border: #e0e0e0;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--light-bg);
-            margin: 0;
-            color: var(--text-main);
-        }
-
-        /* Header Section */
-        .header-bg {
-            background-color: var(--primary-green);
-            color: var(--white);
-            padding: 40px 20px 100px 20px;
-        }
-
-        .header-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        .header-container h1 {
-            font-family: 'Lora', serif;
-            font-size: 32px;
-            margin: 10px 0;
-        }
-
-        .header-meta {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-
-        .header-actions {
-            position: absolute;
-            top: 0;
-            right: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 10px;
-        }
-
-        .date-pill {
-            background: rgba(255,255,255,0.2);
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.85em;
-        }
-
-        .btn-export {
-            background: var(--white);
-            color: var(--primary-green);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: all 0.2s;
-        }
-
-        .btn-export:hover { background: #f0f0f0; transform: translateY(-1px); }
-
-        /* Metric Cards */
-        .metrics-grid {
-            max-width: 1200px;
-            margin: -60px auto 30px auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            padding: 0 20px;
-        }
-
-        .metric-card {
-            background: var(--white);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
-
-        .metric-label {
-            color: var(--text-secondary);
-            font-size: 0.75em;
-            text-transform: uppercase;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        .metric-value {
-            font-family: 'Lora', serif;
-            font-size: 28px;
-            color: var(--dark-green);
-            margin: 10px 0;
-        }
-
-        .metric-trend {
-            font-size: 0.85em;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .trend-down { color: #d32f2f; }
-        .trend-up { color: #388e3c; }
-
-        /* Tabs Section */
-        .main-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px 40px 20px;
-        }
-
-        .tabs-header {
-            display: flex;
-            gap: 30px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 25px;
-        }
-
-        .tab-btn {
-            padding: 12px 5px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            color: var(--text-secondary);
-            border-bottom: 3px solid transparent;
-            font-size: 0.95em;
-        }
-
-        .tab-btn.active {
-            color: var(--primary-green);
-            border-bottom-color: var(--primary-green);
-        }
-
-        .tab-content { display: none; }
+        :root { --primary-green: #4c7c5c; --dark-green: #355e3b; --light-bg: #f5f7f5; --white: #ffffff; --text-main: #333333; --text-secondary: #666666; --border: #e0e0e0; --gauge-bg: #eee; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--light-bg); margin: 0; color: var(--text-main); }
+        .header-bg { background-color: var(--primary-green); color: var(--white); padding: 40px 20px 100px 20px; position: relative; }
+        .header-container { max-width: 1200px; margin: 0 auto; position: relative; }
+        .header-container h1 { font-family: 'Lora', serif; font-size: 32px; margin: 10px 0; }
+        .header-actions { position: absolute; top: 0; right: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+        .btn-export { background: var(--white); color: var(--primary-green); border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .main-container { max-width: 1200px; margin: -60px auto 40px auto; padding: 0 20px; }
+        .tabs-header { display: flex; gap: 30px; border-bottom: 1px solid var(--border); margin-bottom: 25px; background: white; padding: 0 20px; border-radius: 8px 8px 0 0; }
+        .tab-btn { padding: 15px 5px; background: none; border: none; cursor: pointer; font-weight: 600; color: var(--text-secondary); border-bottom: 3px solid transparent; }
+        .tab-btn.active { color: var(--primary-green); border-bottom-color: var(--primary-green); }
+        .tab-content { display: none; background: white; padding: 25px; border-radius: 0 0 8px 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .tab-content.active { display: block; }
-
-        /* UI Elements */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { border: 1px solid #f0f0f0; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; padding: 12px; background: #f8f9f8; color: var(--text-secondary); font-size: 0.8em; text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid #f1f1f1; font-size: 0.9em; }
         .controls { margin-bottom: 20px; display: flex; gap: 15px; }
-        select { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); font-family: inherit; }
+        select { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); }
         
-        .card { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 15px; background: #f8f9f8; color: var(--text-secondary); font-size: 0.8em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
-        td { padding: 15px; border-bottom: 1px solid #f1f1f1; font-size: 0.95em; }
-
-        .progress-bg { height: 8px; background: #eee; border-radius: 4px; flex-grow: 1; }
-        .progress-fill { height: 100%; background: var(--primary-green); border-radius: 4px; }
-
-        /* PDF Export Styles */
-        @media print {
-            .tabs-header, .controls, .btn-export { display: none !important; }
-            .tab-content { display: block !important; page-break-inside: avoid; }
-            .metric-card { box-shadow: none; border: 1px solid #eee; }
-        }
+        /* Gauge Styles */
+        .gauge-container { text-align: center; margin-bottom: 15px; }
+        .gauge-wrapper { width: 80px; height: 40px; background: var(--gauge-bg); position: relative; border-radius: 100px 100px 0 0; overflow: hidden; margin: 0 auto; }
+        .gauge-fill { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary-green); transform-origin: center bottom; transform: rotate(0deg); transition: transform 0.5s; }
+        .gauge-center { position: absolute; bottom: 0; left: 50%; width: 40px; height: 20px; background: white; transform: translateX(-50%); border-radius: 100px 100px 0 0; }
+        .gauge-label { font-size: 0.7em; margin-top: 5px; font-weight: 600; }
+        .station-goal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
     </style>
 </head>
 <body id="dashboard-body">
 
     <div class="header-bg">
         <div class="header-container">
-            <div class="header-meta">Chill Hours Monitor</div>
+            <div style="opacity:0.8; font-size:0.9em;">Operational Oversight</div>
             <h1>Chill Accumulation Dashboard</h1>
-            <div class="header-meta">Season 2025-2026 • Tracking hours 32-45°F for optimal dormancy</div>
-            
+            <div style="opacity:0.8; font-size:0.9em;">Season 2025-2026 • Tracking 1/11/2026 Status</div>
             <div class="header-actions">
-                <div class="date-pill">📅 January 11, 2026</div>
-                <button class="btn-export" onclick="exportPDF()">📥 Download PDF Report</button>
+                <button class="btn-export" onclick="exportPDF()">📥 Export PDF Report</button>
             </div>
-        </div>
-    </div>
-
-    <div class="metrics-grid">
-        <div class="metric-card">
-            <div class="metric-label">Avg. STV All Districts</div>
-            <div class="metric-value">573</div>
-            <div class="metric-trend trend-down">▼ 7% vs 2024</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">Chill Portions Avg</div>
-            <div class="metric-value">38</div>
-            <div class="metric-trend trend-down">▼ 3% vs 2024</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">Best Performer</div>
-            <div class="metric-value">Buena Vista</div>
-            <div class="metric-trend trend-up">▲ 596 hrs</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">Goal Progress</div>
-            <div class="metric-value">72%</div>
-            <div class="metric-trend">Kerman Female</div>
         </div>
     </div>
 
     <div class="main-container">
         <div class="tabs-header">
-            <button class="tab-btn active" id="tab-overview" onclick="openTab('overview')">Overview</button>
-            <button class="tab-btn" id="tab-details" onclick="openTab('details')">Station Details</button>
-            <button class="tab-btn" id="tab-history" onclick="openTab('history')">Historical Comparison</button>
-            <button class="tab-btn" id="tab-goals" onclick="openTab('goals')">Goal Tracking</button>
+            <button class="tab-btn active" onclick="openTab('overview')">Overview</button>
+            <button class="tab-btn" onclick="openTab('details')">Station Detail</button>
+            <button class="tab-btn" onclick="openTab('history')">Historical Comparison</button>
+            <button class="tab-btn" onclick="openTab('goals')">Goal Tracking</button>
         </div>
 
         <div id="overview" class="tab-content active">
+            <div class="grid-2">
+                <div class="card"><canvas id="chartHoursDist"></canvas></div>
+                <div class="card"><canvas id="chartPortionsDist"></canvas></div>
+            </div>
             <div class="card">
-                <h3>District Summaries [Source: 13]</h3>
-                <table>
-                    <thead>
-                        <tr><th>District</th><th>Avg Chill Hours</th><th>Avg Chill Portions</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Stevenson All</td><td>573</td><td>38</td></tr>
-                        <tr><td>Homeland</td><td>573</td><td>39</td></tr>
-                        <tr><td>Kern Lake</td><td>528</td><td>38</td></tr>
-                        <tr><td>Buena Vista</td><td>596</td><td>39</td></tr>
-                    </tbody>
-                </table>
+                <h3>3-Year Historical District Comparison</h3>
+                <canvas id="chart3Year" height="80"></canvas>
             </div>
         </div>
 
         <div id="details" class="tab-content">
             <div class="controls">
-                <select id="ranchFilter" onchange="updateDetails()">
-                    <option value="All">All Ranches</option>
-                    <option value="Corcoran">Corcoran</option>
-                    <option value="Kern">Kern</option>
-                </select>
-                <select id="metricFilter" onchange="updateDetails()">
-                    <option value="hours">Chill Hours</option>
-                    <option value="portions">Chill Portions</option>
-                </select>
+                <select id="fDist" onchange="updateDetails()"><option value="All">All Districts</option><option value="Stevenson">Stevenson</option><option value="Homeland">Homeland</option><option value="Buena Vista">Buena Vista</option><option value="Kern Lake">Kern Lake</option></select>
+                <select id="fMetric" onchange="updateDetails()"><option value="hours">Chill Hours</option><option value="portions">Chill Portions</option></select>
             </div>
-            <div class="card">
-                <table id="detailsTable">
-                    <thead>
-                        <tr><th>Station</th><th>2025-26</th><th>2024-25</th><th>2023-24</th><th>% vs 2025</th><th>Hrs < 45°F</th></tr>
-                    </thead>
-                    <tbody id="detailsBody"></tbody>
-                </table>
-            </div>
+            <table>
+                <thead><tr><th>Station</th><th>2025-26</th><th>2024-25</th><th>2023-24</th><th>% of 2025</th></tr></thead>
+                <tbody id="detailsBody"></tbody>
+            </table>
         </div>
 
         <div id="history" class="tab-content">
             <div class="card">
-                <canvas id="historyChart" height="100"></canvas>
+                <h3>Same Date Historical Comparison (Jan 11)</h3>
+                <canvas id="historyDateChart" height="100"></canvas>
+            </div>
+            <div class="grid-2">
+                <div class="card"><h4>Year-End Goal Benchmark</h4><p>Target: Kerman (750-800) | Peters (850)</p></div>
+                <div class="card"><h4>Portion Year-End Comparison</h4><p>Typical Final Goal: 58-65 Portions</p></div>
             </div>
         </div>
 
         <div id="goals" class="tab-content">
-            <div class="card">
-                <h3>Benchmark Progress (Variety Goals) [Source: 14]</h3>
-                <div id="goalList"></div>
-            </div>
+            <h3>Variety Goal Tracking - Male/Female Kerman & GH</h3>
+            <div id="stationGoalGrid" class="station-goal-grid"></div>
         </div>
     </div>
 
 <script>
-    // Data sourced from PDF sources [12, 13, 16]
-    const orchards = [
-        { loc: "STV 28", ranch: "Corcoran", dist: "Stevenson", h26: 569, h25: 607, h24: 542, p26: 39, p25: 41, p24: 33, raw: 576 },
-        { loc: "STV 27 SW", ranch: "Corcoran", dist: "Stevenson", h26: 596, h25: 663, h24: 591, p26: 37, p25: 38, p24: 34, raw: 609 },
-        { loc: "STV 27 SE", ranch: "Corcoran", dist: "Stevenson", h26: 568, h25: 628, h24: 555, p26: 38, p25: 39, p24: 32, raw: 586 },
-        { loc: "STV 27 NE", ranch: "Corcoran", dist: "Stevenson", h26: 574, h25: 621, h24: 552, p26: 39, p25: 41, p24: 33, raw: 588 },
-        { loc: "STV 22", ranch: "Corcoran", dist: "Stevenson", h26: 574, h25: 628, h24: 566, p26: 39, p25: 38, p24: 33, raw: 588 },
-        { loc: "STV 26D", ranch: "Corcoran", dist: "Stevenson", h26: 555, h25: 583, h24: 537, p26: 38, p25: 38, p24: 31, raw: 564 },
-        { loc: "STV 35", ranch: "Corcoran", dist: "Stevenson", h26: 552, h25: 584, h24: 511, p26: 36, p25: 41, p24: 31, raw: 560 },
-        { loc: "STV 2", ranch: "Corcoran", dist: "Stevenson", h26: 585, h25: 616, h24: 535, p26: 39, p25: 39, p24: 32, raw: 593 },
-        { loc: "STV 3", ranch: "Corcoran", dist: "Stevenson", h26: 590, h25: 631, h24: 533, p26: 38, p25: 38, p24: 31, raw: 601 },
-        { loc: "STV 4", ranch: "Corcoran", dist: "Stevenson", h26: 563, h25: 572, h24: 482, p26: 39, p25: 38, p24: 33, raw: 569 },
-        { loc: "HL 32 NW", ranch: "Corcoran", dist: "Homeland", h26: 573, h25: 589, h24: 488, p26: 39, p25: 41, p24: 36, raw: 575 },
-        { loc: "KL", ranch: "Kern", dist: "Kern Lake", h26: 528, h25: 607, h24: 519, p26: 38, p25: 36, p24: 33, raw: 541 },
-        { loc: "BV", ranch: "Kern", dist: "Buena Vista", h26: 596, h25: 614, h24: 546, p26: 39, p25: 38, p24: 31, raw: 618 }
+    const stations = [
+        { loc: "STV 28", dist: "Stevenson", h26: 569, h25: 607, h24: 542, p26: 39, p25: 41, p24: 33 },
+        { loc: "STV 27 SW", dist: "Stevenson", h26: 596, h25: 663, h24: 591, p26: 37, p25: 38, p24: 34 },
+        { loc: "STV 27 SE", dist: "Stevenson", h26: 568, h25: 628, h24: 555, p26: 38, p25: 39, p24: 32 },
+        { loc: "STV 27 NE", dist: "Stevenson", h26: 574, h25: 621, h24: 552, p26: 39, p25: 41, p24: 33 },
+        { loc: "STV 22", dist: "Stevenson", h26: 574, h25: 628, h24: 566, p26: 39, p25: 38, p24: 33 },
+        { loc: "STV 26D", dist: "Stevenson", h26: 555, h25: 583, h24: 537, p26: 38, p25: 38, p24: 31 },
+        { loc: "STV 35", dist: "Stevenson", h26: 552, h25: 584, h24: 511, p26: 36, p25: 41, p24: 31 },
+        { loc: "STV 2", dist: "Stevenson", h26: 585, h25: 616, h24: 535, p26: 39, p25: 39, p24: 32 },
+        { loc: "STV 3", dist: "Stevenson", h26: 590, h25: 631, h24: 533, p26: 38, p25: 38, p24: 31 },
+        { loc: "STV 4", dist: "Stevenson", h26: 563, h25: 572, h24: 482, p26: 39, p25: 38, p24: 33 },
+        { loc: "HL 32 NW", dist: "Homeland", h26: 573, h25: 589, h24: 488, p26: 39, p25: 41, p24: 36 },
+        { loc: "KL", dist: "Kern Lake", h26: 528, h25: 607, h24: 519, p26: 38, p25: 36, p24: 33 },
+        { loc: "BV", dist: "Buena Vista", h26: 596, h25: 614, h24: 546, p26: 39, p25: 38, p24: 31 }
     ];
 
-    const varietyGoals = [
-        { name: "Kerman Female (Hrs)", target: 800, current: 573 },
-        { name: "Peters (Hrs)", target: 850, current: 573 },
-        { name: "Mateur (Portions)", target: 36, current: 38 },
-        { name: "Sirora (Portions)", target: 60, current: 38 }
-    ];
+    const distAverages = {
+        "Stevenson": { h: [573, 613, 540], p: [38, 39, 32] },
+        "Homeland": { h: [573, 589, 488], p: [39, 41, 36] },
+        "Kern Lake": { h: [528, 607, 519], p: [38, 36, 33] },
+        "Buena Vista": { h: [596, 614, 546], p: [39, 38, 31] }
+    };
 
-    let historyChart = null;
+    function openTab(id) {
+        document.querySelectorAll('.tab-content, .tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        event.currentTarget.classList.add('active');
+        if(id==='overview') renderOverview();
+        if(id==='history') renderHistory();
+        if(id==='goals') renderGoals();
+    }
 
-    function openTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        document.getElementById('tab-' + tabId).classList.add('active');
-        if(tabId === 'history') renderHistoryChart();
-        if(tabId === 'goals') renderGoals();
+    function renderOverview() {
+        const ctxH = document.getElementById('chartHoursDist').getContext('2d');
+        new Chart(ctxH, { type:'bar', data: { labels: Object.keys(distAverages), datasets: [{ label:'Current Chill Hours', data: Object.values(distAverages).map(v=>v.h[0]), backgroundColor:'#4c7c5c' }]} });
+        
+        const ctxP = document.getElementById('chartPortionsDist').getContext('2d');
+        new Chart(ctxP, { type:'bar', data: { labels: Object.keys(distAverages), datasets: [{ label:'Current Chill Portions', data: Object.values(distAverages).map(v=>v.p[0]), backgroundColor:'#97bc62' }]} });
+
+        const ctx3 = document.getElementById('chart3Year').getContext('2d');
+        new Chart(ctx3, { type:'bar', data: { 
+            labels: Object.keys(distAverages), 
+            datasets: [
+                { label:'2026', data: Object.values(distAverages).map(v=>v.h[0]), backgroundColor:'#4c7c5c' },
+                { label:'2025', data: Object.values(distAverages).map(v=>v.h[1]), backgroundColor:'#97bc62' },
+                { label:'2024', data: Object.values(distAverages).map(v=>v.h[2]), backgroundColor:'#3498db' }
+            ] 
+        }});
     }
 
     function updateDetails() {
-        const ranch = document.getElementById('ranchFilter').value;
-        const metric = document.getElementById('metricFilter').value;
-        const tbody = document.getElementById('detailsBody');
-        tbody.innerHTML = '';
-
-        const filtered = orchards.filter(o => ranch === "All" || o.ranch === ranch);
-        
-        filtered.forEach(o => {
-            const v26 = metric === 'hours' ? o.h26 : o.p26;
-            const v25 = metric === 'hours' ? o.h25 : o.p25;
-            const v24 = metric === 'hours' ? o.h24 : o.p24;
-            tbody.innerHTML += `<tr>
-                <td><strong>${o.loc}</strong></td><td>${v26}</td><td>${v25}</td><td>${v24}</td>
-                <td>${Math.round((v26/v25)*100)}%</td><td>${o.raw}</td>
-            </tr>`;
+        const d = document.getElementById('fDist').value;
+        const m = document.getElementById('fMetric').value;
+        const body = document.getElementById('detailsBody'); body.innerHTML = '';
+        stations.filter(s => d === 'All' || s.dist === d).forEach(s => {
+            const v26 = m === 'hours' ? s.h26 : s.p26;
+            const v25 = m === 'hours' ? s.h25 : s.p25;
+            const v24 = m === 'hours' ? s.h24 : s.p24;
+            body.innerHTML += `<tr><td>${s.loc}</td><td>${v26}</td><td>${v25}</td><td>${v24}</td><td>${Math.round((v26/v25)*100)}%</td></tr>`;
         });
     }
 
-    function renderHistoryChart() {
-        const ctx = document.getElementById('historyChart').getContext('2d');
-        if (historyChart) historyChart.destroy();
-        historyChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: orchards.map(o => o.loc),
-                datasets: [
-                    { label: '2025-26 Current', data: orchards.map(o => o.h26), backgroundColor: '#4c7c5c' },
-                    { label: '2024-25 Historic', data: orchards.map(o => o.h25), backgroundColor: '#97bc62' }
-                ]
-            },
-            options: { responsive: true, scales: { y: { beginAtZero: true } } }
-        });
+    function renderHistory() {
+        const ctxDate = document.getElementById('historyDateChart').getContext('2d');
+        new Chart(ctxDate, { type:'line', data: { 
+            labels: stations.map(s=>s.loc), 
+            datasets: [
+                { label:'2026 Jan 11', data: stations.map(s=>s.h26), borderColor:'#4c7c5c', fill:false },
+                { label:'2025 Jan 11', data: stations.map(s=>s.h25), borderColor:'#97bc62', fill:false },
+                { label:'2024 Jan 11', data: stations.map(s=>s.h24), borderColor:'#3498db', fill:false }
+            ] 
+        }});
     }
 
     function renderGoals() {
-        const container = document.getElementById('goalList');
-        container.innerHTML = '';
-        varietyGoals.forEach(g => {
-            const pct = Math.min(Math.round((g.current / g.target) * 100), 100);
-            container.innerHTML += `
-                <div style="margin-bottom: 25px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9em;">
-                        <span><strong>${g.name}</strong> (Goal: ${g.target})</span>
-                        <span>${pct}%</span>
-                    </div>
-                    <div class="progress-bg"><div class="progress-fill" style="width:${pct}%"></div></div>
-                </div>
-            `;
+        const grid = document.getElementById('stationGoalGrid'); grid.innerHTML = '';
+        stations.forEach(s => {
+            const goals = [{n:'Male Kerm (900)', t:900}, {n:'Fem Kerm (800)', t:800}, {n:'Male GH (800)', t:800}, {n:'Fem GH (800)', t:800}];
+            let goalHtml = `<div class="card"><h4>${s.loc} (${s.h26} hrs)</h4><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">`;
+            goals.forEach(g => {
+                const pct = Math.min(Math.round((s.h26/g.t)*100), 100);
+                const rot = (pct / 100) * 180;
+                goalHtml += `<div class="gauge-container">
+                    <div class="gauge-wrapper"><div class="gauge-fill" style="transform: rotate(${rot}deg)"></div><div class="gauge-center"></div></div>
+                    <div class="gauge-label">${g.n}<br>${pct}%</div>
+                </div>`;
+            });
+            grid.innerHTML += goalHtml + `</div></div>`;
         });
     }
 
     async function exportPDF() {
-        const element = document.getElementById('dashboard-body');
-        const opt = {
-            margin:       0.5,
-            filename:     'Chill_Report_Jan_11_2026.pdf',
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-
-        // Temporary UI cleanup for export
-        const controls = document.querySelectorAll('.tabs-header, .controls, .btn-export');
-        controls.forEach(c => c.style.display = 'none');
-        
-        // Ensure all data is visible in the report
+        const opt = { margin: 0.5, filename: 'Chill_Report_1_11_2026.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
         document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'block');
-
-        try {
-            await html2pdf().set(opt).from(element).save();
-        } finally {
-            // Restore UI
-            controls.forEach(c => c.style.display = '');
-            document.querySelectorAll('.tab-content').forEach((t, i) => {
-                if (!t.classList.contains('active')) t.style.display = 'none';
-            });
-        }
+        await html2pdf().set(opt).from(document.getElementById('dashboard-body')).save();
+        location.reload();
     }
 
-    // Initialize
+    renderOverview();
     updateDetails();
 </script>
 </body>
