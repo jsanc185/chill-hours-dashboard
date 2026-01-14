@@ -3,30 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orchard Chill Dashboard - Advanced Filtering</title>
+    <title>Orchard Chill Dashboard - Multi-Year Comparison</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary: #2c5f2d; --secondary: #97bc62; --bg: #f4f7f6; --text: #333; --white: #fff; --border: #ddd; --avg-bg: #e8f5e9; }
+        :root { --primary: #2c5f2d; --secondary: #97bc62; --accent: #3498db; --bg: #f4f7f6; --text: #333; --white: #fff; --border: #ddd; --avg-bg: #e8f5e9; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
+        .container { max-width: 1400px; margin: 0 auto; }
         header { text-align: center; margin-bottom: 20px; }
         
         .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .filter-item { display: flex; flex-direction: column; gap: 5px; }
         
-        .btn-group { display: flex; gap: 5px; margin-bottom: 20px; justify-content: center; }
+        .btn-group { display: flex; gap: 5px; margin-bottom: 20 - px; justify-content: center; padding-bottom: 20px;}
         .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; background-color: #ddd; }
         .btn.active { background-color: var(--primary); color: var(--white); }
         
         select { padding: 8px; border-radius: 5px; border: 1px solid var(--border); }
         .card { background: var(--white); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
-        table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
-        th { background-color: var(--primary); color: var(--white); }
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85em; min-width: 800px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background-color: var(--primary); color: var(--white); position: sticky; top: 0; }
         
-        tr.avg-row { background-color: var(--avg-bg); font-weight: bold; }
-        .progress-bar { height: 8px; background-color: #eee; border-radius: 4px; width: 60px; display: inline-block; margin-right: 5px; }
+        tr.avg-row { background-color: var(--avg-bg); font-weight: bold; border-top: 2px solid var(--primary); }
+        .progress-bar { height: 8px; background-color: #eee; border-radius: 4px; width: 50px; display: inline-block; margin-right: 5px; }
         .progress-fill { height: 100%; background-color: var(--secondary); border-radius: 4px; }
     </style>
 </head>
@@ -35,7 +36,7 @@
 <div class="container">
     <header>
         <h1>District & Ranch Chill Analysis</h1>
-        <p>Data Status: January 11, 2026</p>
+        <p>Comparison of 2026 Current vs Historic Datasets</p>
     </header>
 
     <div class="btn-group">
@@ -63,10 +64,11 @@
             </select>
         </div>
         <div class="filter-item">
-            <label><strong>Comparison Year:</strong></label>
+            <label><strong>Comparison View:</strong></label>
             <select id="yearSelect" onchange="updateUI()">
-                <option value="2025">Historic 2025</option>
-                <option value="2024">Historic 2024</option>
+                <option value="All">All Years Together</option>
+                <option value="2025">vs 2025 Historic Only</option>
+                <option value="2024">vs 2024 Historic Only</option>
             </select>
         </div>
     </div>
@@ -75,25 +77,15 @@
         <canvas id="mainChart" height="100"></canvas>
     </div>
 
-    <div class="card">
+    <div class="card table-responsive">
         <table id="dataTable">
-            <thead>
-                <tr>
-                    <th>Location</th>
-                    <th>District</th>
-                    <th>2026 Current</th>
-                    <th id="histHeader">2025 Historic</th>
-                    <th>% vs Historic</th>
-                    <th>Goal (F. Kerm)</th>
-                </tr>
-            </thead>
+            <thead id="tableHeader"></thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
 </div>
 
 <script>
-    // Data sourced from PDF sources 12, 13, and 16
     const orchards = [
         { loc: "STV 28", ranch: "Corcoran", dist: "Stevenson", h26: 569, h25: 607, h24: 542, p26: 39, p25: 41, p24: 33 },
         { loc: "STV 27 SW", ranch: "Corcoran", dist: "Stevenson", h26: 596, h25: 663, h24: 591, p26: 37, p25: 38, p24: 34 },
@@ -135,76 +127,82 @@
     function updateUI() {
         const ranch = document.getElementById('ranchSelect').value;
         const dist = document.getElementById('districtSelect').value;
-        const year = document.getElementById('yearSelect').value;
+        const view = document.getElementById('yearSelect').value;
         const goalVal = currentMetric === 'hours' ? 800 : 58;
-
-        document.getElementById('histHeader').innerText = year + " Historic";
 
         const filtered = orchards.filter(o => 
             (ranch === "All" || o.ranch === ranch) && 
             (dist === "All" || o.dist === dist)
         );
 
+        // Update Headers
+        const header = document.getElementById('tableHeader');
+        if (view === "All") {
+            header.innerHTML = `<tr><th>Location</th><th>District</th><th>26 Cur</th><th>25 Hist</th><th>24 Hist</th><th>% '25</th><th>% '24</th><th>Goal Progress</th></tr>`;
+        } else {
+            header.innerHTML = `<tr><th>Location</th><th>District</th><th>26 Cur</th><th>${view} Hist</th><th>% vs ${view}</th><th>Goal Progress</th></tr>`;
+        }
+
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
-        
-        // Group data by district to calculate averages
-        const groups = filtered.reduce((acc, obj) => {
-            (acc[obj.dist] = acc[obj.dist] || []).push(obj);
-            return acc;
-        }, {});
+        const labels = [], c26 = [], c25 = [], c24 = [];
 
-        const labels = [], curVals = [], histVals = [];
+        const groups = filtered.reduce((acc, obj) => { (acc[obj.dist] = acc[obj.dist] || []).push(obj); return acc; }, {});
 
         Object.keys(groups).forEach(districtName => {
             const districtOrchards = groups[districtName];
-            let sumCur = 0, sumHist = 0;
+            let s26=0, s25=0, s24=0;
 
             districtOrchards.forEach(o => {
-                const cur = currentMetric === 'hours' ? o.h26 : o.p26;
-                const hist = currentMetric === 'hours' ? (year === '2025' ? o.h25 : o.h24) : (year === '2025' ? o.p25 : o.p24);
-                
-                sumCur += cur;
-                sumHist += hist;
+                const v26 = currentMetric === 'hours' ? o.h26 : o.p26;
+                const v25 = currentMetric === 'hours' ? o.h25 : o.p25;
+                const v24 = currentMetric === 'hours' ? o.h24 : o.p24;
+                s26 += v26; s25 += v25; s24 += v24;
 
-                tbody.innerHTML += `<tr>
-                    <td>${o.loc}</td>
-                    <td>${o.dist}</td>
-                    <td>${cur}</td>
-                    <td>${hist}</td>
-                    <td>${Math.round((cur/hist)*100)}%</td>
-                    <td><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(Math.round((cur/goalVal)*100),100)}%"></div></div> ${Math.round((cur/goalVal)*100)}%</td>
-                </tr>`;
+                const goalPct = Math.round((v26/goalVal)*100);
                 
+                let rowHtml = `<td>${o.loc}</td><td>${o.dist}</td><td>${v26}</td>`;
+                if (view === "All") {
+                    rowHtml += `<td>${v25}</td><td>${v24}</td><td>${Math.round((v26/v25)*100)}%</td><td>${Math.round((v26/v24)*100)}%</td>`;
+                } else if (view === "2025") {
+                    rowHtml += `<td>${v25}</td><td>${Math.round((v26/v25)*100)}%</td>`;
+                } else {
+                    rowHtml += `<td>${v24}</td><td>${Math.round((v26/v24)*100)}%</td>`;
+                }
+                rowHtml += `<td><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(goalPct,100)}%"></div></div> ${goalPct}%</td>`;
+                tbody.innerHTML += `<tr>${rowHtml}</tr>`;
+
                 labels.push(o.loc);
-                curVals.push(cur);
-                histVals.push(hist);
+                c26.push(v26); c25.push(v25); c24.push(v24);
             });
 
-            // Add District Average Row
-            const avgCur = Math.round((sumCur / districtOrchards.length) * 10) / 10;
-            const avgHist = Math.round((sumHist / districtOrchards.length) * 10) / 10;
-            const avgGoalPct = Math.round((avgCur / goalVal) * 100);
+            // Average Row
+            const len = districtOrchards.length;
+            const a26 = Math.round((s26/len)*10)/10, a25 = Math.round((s25/len)*10)/10, a24 = Math.round((s24/len)*10)/10;
+            const aGoal = Math.round((a26/goalVal)*100);
 
-            tbody.innerHTML += `<tr class="avg-row">
-                <td>${districtName} AVERAGE</td>
-                <td>${districtName}</td>
-                <td>${avgCur}</td>
-                <td>${avgHist}</td>
-                <td>${Math.round((avgCur/avgHist)*100)}%</td>
-                <td><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(avgGoalPct, 100)}%"></div></div> ${avgGoalPct}%</td>
-            </tr>`;
+            let avgHtml = `<td>${districtName} AVG</td><td>${districtName}</td><td>${a26}</td>`;
+            if (view === "All") {
+                avgHtml += `<td>${a25}</td><td>${a24}</td><td>${Math.round((a26/a25)*100)}%</td><td>${Math.round((a26/a24)*100)}%</td>`;
+            } else if (view === "2025") {
+                avgHtml += `<td>${a25}</td><td>${Math.round((a26/a25)*100)}%</td>`;
+            } else {
+                avgHtml += `<td>${a24}</td><td>${Math.round((a26/a24)*100)}%</td>`;
+            }
+            avgHtml += `<td><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(aGoal,100)}%"></div></div> ${aGoal}%</td>`;
+            tbody.innerHTML += `<tr class="avg-row">${avgHtml}</tr>`;
         });
 
-        // Update Chart
+        // Chart Update
         if (chartObj) chartObj.destroy();
+        const datasets = [{ label: '2026 Current', data: c26, backgroundColor: '#2c5f2d' }];
+        if (view === "All" || view === "2025") datasets.push({ label: '2025 Historic', data: c25, backgroundColor: '#97bc62' });
+        if (view === "All" || view === "2024") datasets.push({ label: '2024 Historic', data: c24, backgroundColor: '#3498db' });
+
         chartObj = new Chart(document.getElementById('mainChart').getContext('2d'), {
             type: 'bar',
-            data: { labels: labels, datasets: [
-                { label: '2026 Current', data: curVals, backgroundColor: '#2c5f2d' },
-                { label: year + ' Historic', data: histVals, backgroundColor: '#97bc62' }
-            ]},
-            options: { responsive: true, plugins: { title: { display: true, text: 'Current vs ' + year + ' Comparison' } } }
+            data: { labels: labels, datasets: datasets },
+            options: { responsive: true, plugins: { title: { display: true, text: 'Comparative Data: ' + (currentMetric === 'hours' ? 'Chill Hours' : 'Chill Portions') } } }
         });
     }
 
