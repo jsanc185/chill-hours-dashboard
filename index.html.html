@@ -3,397 +3,268 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chill Accumulation Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Lora:wght@700&display=swap" rel="stylesheet">
-    
+    <title>Chill Hours Dashboard | January 11, 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
         :root {
-            --primary-green: #4c7c5c;
-            --dark-green: #355e3b;
-            --light-bg: #f5f7f5;
-            --white: #ffffff;
-            --text-main: #333333;
-            --text-secondary: #666666;
-            --border: #e0e0e0;
+            --bg-primary: #f4f1eb;
+            --bg-secondary: #ffffff;
+            --bg-accent: #e8e4dc;
+            --text-primary: #2c3e2d;
+            --text-secondary: #5a6b5b;
+            --text-muted: #8a9a8b;
+            --accent-green: #4a7c59;
+            --accent-green-light: #6b9b7a;
+            --accent-gold: #c4a35a;
+            --accent-gold-light: #e8d49c;
+            --accent-rust: #b5614f;
+            --accent-blue: #5a7c9b;
+            --border-color: #d4cfc5;
+            --shadow-sm: 0 1px 3px rgba(44, 62, 45, 0.08);
+            --shadow-md: 0 4px 12px rgba(44, 62, 45, 0.1);
+            --shadow-lg: 0 8px 24px rgba(44, 62, 45, 0.12);
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--light-bg);
-            margin: 0;
-            color: var(--text-main);
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
         }
 
-        /* Header Section */
-        .header-bg {
-            background-color: var(--primary-green);
-            color: var(--white);
-            padding: 40px 20px 100px 20px;
+        .noise-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; opacity: 0.03; z-index: 1000;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
         }
 
-        .header-container {
-            max-width: 1200px;
-            margin: 0 auto;
+        header {
+            background: linear-gradient(135deg, var(--accent-green) 0%, #3d6b4a 100%);
+            padding: 2rem 2rem 3rem;
             position: relative;
+            overflow: hidden;
         }
 
-        .header-container h1 {
-            font-family: 'Lora', serif;
-            font-size: 32px;
-            margin: 10px 0;
-        }
-
-        .header-meta {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-
-        .header-actions {
+        header::before {
+            content: '';
             position: absolute;
-            top: 0;
-            right: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 10px;
+            top: 0; right: 0; width: 50%; height: 100%;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
         }
 
-        .date-pill {
-            background: rgba(255,255,255,0.2);
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.85em;
+        .header-content { max-width: 1400px; margin: 0 auto; position: relative; z-index: 1; }
+        .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+        
+        .logo { display: flex; align-items: center; gap: 0.75rem; }
+        .logo-icon {
+            width: 48px; height: 48px; background: rgba(255,255,255,0.15);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+        }
+        .logo-icon svg { width: 28px; height: 28px; fill: white; }
+        .logo-text { font-family: 'Fraunces', serif; font-size: 1.5rem; font-weight: 600; color: white; letter-spacing: -0.02em; }
+
+        .date-badge {
+            background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+            padding: 0.5rem 1rem; border-radius: 100px; color: white; font-size: 0.875rem; font-weight: 500;
         }
 
-        .btn-export {
-            background: var(--white);
-            color: var(--primary-green);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: all 0.2s;
+        h1 { font-family: 'Fraunces', serif; font-size: 2.5rem; font-weight: 700; color: white; letter-spacing: -0.03em; margin-bottom: 0.5rem; }
+        .header-subtitle { color: rgba(255,255,255,0.8); font-size: 1rem; }
+
+        .main-container { max-width: 1400px; margin: 0 auto; padding: 0 2rem 3rem; margin-top: -1.5rem; position: relative; z-index: 2; }
+
+        .summary-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+        .summary-card {
+            background: var(--bg-secondary); border-radius: 16px; padding: 1.25rem;
+            box-shadow: var(--shadow-md); border: 1px solid var(--border-color);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+        .summary-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        .summary-card-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.5rem; font-weight: 600; }
+        .summary-card-value { font-family: 'Fraunces', serif; font-size: 2rem; font-weight: 700; color: var(--text-primary); line-height: 1.1; }
 
-        .btn-export:hover { background: #f0f0f0; transform: translateY(-1px); }
-
-        /* Metric Cards */
-        .metrics-grid {
-            max-width: 1200px;
-            margin: -60px auto 30px auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            padding: 0 20px;
+        .summary-card-change {
+            display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.8rem; font-weight: 600;
+            margin-top: 0.5rem; padding: 0.25rem 0.5rem; border-radius: 100px;
         }
+        .summary-card-change.positive { background: rgba(74, 124, 89, 0.1); color: var(--accent-green); }
+        .summary-card-change.negative { background: rgba(181, 97, 79, 0.1); color: var(--accent-rust); }
 
-        .metric-card {
-            background: var(--white);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
+        .tabs-container { background: var(--bg-secondary); border-radius: 16px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color); margin-bottom: 2rem; overflow: hidden; }
+        .tabs { display: flex; border-bottom: 1px solid var(--border-color); background: var(--bg-accent); }
+        .tab { padding: 1rem 1.5rem; font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); cursor: pointer; border: none; background: none; position: relative; transition: color 0.2s ease; }
+        .tab.active { color: var(--accent-green); }
+        .tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 3px; background: var(--accent-green); border-radius: 3px 3px 0 0; }
 
-        .metric-label {
-            color: var(--text-secondary);
-            font-size: 0.75em;
-            text-transform: uppercase;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        .metric-value {
-            font-family: 'Lora', serif;
-            font-size: 28px;
-            color: var(--dark-green);
-            margin: 10px 0;
-        }
-
-        .metric-trend {
-            font-size: 0.85em;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .trend-down { color: #d32f2f; }
-        .trend-up { color: #388e3c; }
-
-        /* Tabs Section */
-        .main-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px 40px 20px;
-        }
-
-        .tabs-header {
-            display: flex;
-            gap: 30px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 25px;
-        }
-
-        .tab-btn {
-            padding: 12px 5px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            color: var(--text-secondary);
-            border-bottom: 3px solid transparent;
-            font-size: 0.95em;
-        }
-
-        .tab-btn.active {
-            color: var(--primary-green);
-            border-bottom-color: var(--primary-green);
-        }
-
-        .tab-content { display: none; }
+        .tab-content { display: none; padding: 1.5rem; animation: fadeIn 0.3s ease; }
         .tab-content.active { display: block; }
 
-        /* UI Elements */
-        .controls { margin-bottom: 20px; display: flex; gap: 15px; }
-        select { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); font-family: inherit; }
-        
-        .card { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 15px; background: #f8f9f8; color: var(--text-secondary); font-size: 0.8em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
-        td { padding: 15px; border-bottom: 1px solid #f1f1f1; font-size: 0.95em; }
+        .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+        .chart-card { background: var(--bg-secondary); border-radius: 16px; padding: 1.5rem; box-shadow: var(--shadow-md); border: 1px solid var(--border-color); }
+        .chart-card.full-width { grid-column: span 2; }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .chart-title { font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 600; color: var(--text-primary); }
+        .chart-wrapper { position: relative; height: 280px; }
 
-        .progress-bg { height: 8px; background: #eee; border-radius: 4px; flex-grow: 1; }
-        .progress-fill { height: 100%; background: var(--primary-green); border-radius: 4px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .data-table thead { background: var(--bg-accent); }
+        .data-table th { padding: 0.875rem 1rem; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid var(--border-color); }
+        .data-table td { padding: 0.875rem 1rem; border-bottom: 1px solid var(--border-color); color: var(--text-primary); }
+        .data-table .district-header { background: linear-gradient(90deg, var(--accent-green) 0%, var(--accent-green-light) 100%); color: white; font-weight: 600; }
 
-        /* PDF Export Styles */
-        @media print {
-            .tabs-header, .controls, .btn-export { display: none !important; }
-            .tab-content { display: block !important; page-break-inside: avoid; }
-            .metric-card { box-shadow: none; border: 1px solid #eee; }
-        }
+        .progress-bar { width: 100%; height: 8px; background: var(--bg-accent); border-radius: 100px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 100px; }
+        .progress-fill.green { background: linear-gradient(90deg, var(--accent-green), var(--accent-green-light)); }
+        .progress-fill.gold { background: linear-gradient(90deg, var(--accent-gold), var(--accent-gold-light)); }
+        .progress-fill.rust { background: linear-gradient(90deg, var(--accent-rust), #d4897a); }
+
+        .info-box { background: linear-gradient(135deg, rgba(74, 124, 89, 0.08) 0%, rgba(107, 155, 122, 0.05) 100%); border: 1px solid rgba(74, 124, 89, 0.2); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; gap: 0.75rem; }
+        .info-icon { width: 20px; height: 20px; color: var(--accent-green); flex-shrink: 0; }
+
+        footer { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.8rem; }
+
+        @media (max-width: 1024px) { .summary-cards { grid-template-columns: repeat(2, 1fr); } .charts-grid { grid-template-columns: 1fr; } .chart-card.full-width { grid-column: span 1; } }
+        @media (max-width: 640px) { h1 { font-size: 1.75rem; } .summary-cards { grid-template-columns: 1fr; } .tabs { overflow-x: auto; } }
     </style>
 </head>
-<body id="dashboard-body">
+<body>
+    <div class="noise-overlay"></div>
+    <header>
+        <div class="header-content">
+            <div class="header-top">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 24 24"><path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/></svg>
+                    </div>
+                    <span class="logo-text">Chill Hours Monitor</span>
+                </div>
+                <div class="date-badge">📅 Jan 11, 2026</div>
+            </div>
+            <h1>Chill Accumulation</h1>
+            <p class="header-subtitle">Season 2025-2026 • Monitoring 32-45°F Thresholds</p>
+        </div>
+    </header>
 
-    <div class="header-bg">
-        <div class="header-container">
-            <div class="header-meta">Chill Hours Monitor</div>
-            <h1>Chill Accumulation Dashboard</h1>
-            <div class="header-meta">Season 2025-2026 • Tracking hours 32-45°F for optimal dormancy</div>
-            
-            <div class="header-actions">
-                <div class="date-pill">📅 January 11, 2026</div>
-                <button class="btn-export" onclick="exportPDF()">📥 Download PDF Report</button>
+    <main class="main-container">
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-card-label">Avg. Chill Hours</div>
+                <div class="summary-card-value">573</div>
+                <div class="summary-card-change negative">▼ 7% vs 2024</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-card-label">Chill Portions</div>
+                <div class="summary-card-value">38</div>
+                <div class="summary-card-change negative">▼ 3% vs 2024</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-card-label">Best Performer</div>
+                <div class="summary-card-value">Buena Vista</div>
+                <div class="summary-card-change positive">▲ 596 hrs</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-card-label">Goal Progress</div>
+                <div class="summary-card-value">64%</div>
+                <div class="summary-card-change positive">On Track</div>
             </div>
         </div>
-    </div>
 
-    <div class="metrics-grid">
-        <div class="metric-card">
-            <div class="metric-label">Avg. STV All Districts</div>
-            <div class="metric-value">573</div>
-            <div class="metric-trend trend-down">▼ 7% vs 2024</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">Chill Portions Avg</div>
-            <div class="metric-value">38</div>
-            <div class="metric-trend trend-down">▼ 3% vs 2024</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">Best Performer</div>
-            <div class="metric-value">Buena Vista</div>
-            <div class="metric-trend trend-up">▲ 596 hrs</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">Goal Progress</div>
-            <div class="metric-value">72%</div>
-            <div class="metric-trend">Kerman Female</div>
-        </div>
-    </div>
+        <div class="tabs-container">
+            <div class="tabs">
+                <button class="tab active" data-tab="overview">Overview</button>
+                <button class="tab" data-tab="stations">Stations</button>
+                <button class="tab" data-tab="goals">Goals</button>
+            </div>
 
-    <div class="main-container">
-        <div class="tabs-header">
-            <button class="tab-btn active" id="tab-overview" onclick="openTab('overview')">Overview</button>
-            <button class="tab-btn" id="tab-details" onclick="openTab('details')">Station Details</button>
-            <button class="tab-btn" id="tab-history" onclick="openTab('history')">Historical Comparison</button>
-            <button class="tab-btn" id="tab-goals" onclick="openTab('goals')">Goal Tracking</button>
-        </div>
+            <div id="overview" class="tab-content active">
+                <div class="info-box">
+                    <svg class="info-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    <div class="info-text">
+                        <strong>Season Status:</strong> Accumulation is 7% behind the 2024-2025 season. Kern Lake shows the largest deficit (13%).
+                    </div>
+                </div>
+                <div class="charts-grid">
+                    <div class="chart-card"><div class="chart-wrapper"><canvas id="districtChart"></canvas></div></div>
+                    <div class="chart-card"><div class="chart-wrapper"><canvas id="portionsChart"></canvas></div></div>
+                </div>
+            </div>
 
-        <div id="overview" class="tab-content active">
-            <div class="card">
-                <h3>District Summaries [Source: 13]</h3>
-                <table>
-                    <thead>
-                        <tr><th>District</th><th>Avg Chill Hours</th><th>Avg Chill Portions</th></tr>
-                    </thead>
+            <div id="stations" class="tab-content">
+                <table class="data-table">
+                    <thead><tr><th>Station</th><th>25-26</th><th>24-25</th><th>% of '24</th></tr></thead>
                     <tbody>
-                        <tr><td>Stevenson All</td><td>573</td><td>38</td></tr>
-                        <tr><td>Homeland</td><td>573</td><td>39</td></tr>
-                        <tr><td>Kern Lake</td><td>528</td><td>38</td></tr>
-                        <tr><td>Buena Vista</td><td>596</td><td>39</td></tr>
+                        <tr class="district-header"><td colspan="4">Stevenson District</td></tr>
+                        <tr><td>STV 28</td><td>569</td><td>607</td><td>94%</td></tr>
+                        <tr><td>STV 27 SW</td><td>596</td><td>663</td><td>90%</td></tr>
+                        <tr class="district-header"><td colspan="4">Kern Lake District</td></tr>
+                        <tr><td>KL</td><td>528</td><td>607</td><td>87%</td></tr>
                     </tbody>
                 </table>
             </div>
-        </div>
 
-        <div id="details" class="tab-content">
-            <div class="controls">
-                <select id="ranchFilter" onchange="updateDetails()">
-                    <option value="All">All Ranches</option>
-                    <option value="Corcoran">Corcoran</option>
-                    <option value="Kern">Kern</option>
-                </select>
-                <select id="metricFilter" onchange="updateDetails()">
-                    <option value="hours">Chill Hours</option>
-                    <option value="portions">Chill Portions</option>
-                </select>
-            </div>
-            <div class="card">
-                <table id="detailsTable">
-                    <thead>
-                        <tr><th>Station</th><th>2025-26</th><th>2024-25</th><th>2023-24</th><th>% vs 2025</th><th>Hrs < 45°F</th></tr>
-                    </thead>
-                    <tbody id="detailsBody"></tbody>
+            <div id="goals" class="tab-content">
+                <table class="data-table" id="goalsTable">
+                    <thead><tr><th>District</th><th>Hours</th><th>Kerman (800)</th></tr></thead>
+                    <tbody id="goalsTableBody"></tbody>
                 </table>
             </div>
         </div>
+    </main>
 
-        <div id="history" class="tab-content">
-            <div class="card">
-                <canvas id="historyChart" height="100"></canvas>
-            </div>
-        </div>
+    <footer>Chill Hours Dashboard • Data as of Jan 11, 2026</footer>
 
-        <div id="goals" class="tab-content">
-            <div class="card">
-                <h3>Benchmark Progress (Variety Goals) [Source: 14]</h3>
-                <div id="goalList"></div>
-            </div>
-        </div>
-    </div>
-
-<script>
-    // Data sourced from PDF sources [12, 13, 16]
-    const orchards = [
-        { loc: "STV 28", ranch: "Corcoran", dist: "Stevenson", h26: 569, h25: 607, h24: 542, p26: 39, p25: 41, p24: 33, raw: 576 },
-        { loc: "STV 27 SW", ranch: "Corcoran", dist: "Stevenson", h26: 596, h25: 663, h24: 591, p26: 37, p25: 38, p24: 34, raw: 609 },
-        { loc: "STV 27 SE", ranch: "Corcoran", dist: "Stevenson", h26: 568, h25: 628, h24: 555, p26: 38, p25: 39, p24: 32, raw: 586 },
-        { loc: "STV 27 NE", ranch: "Corcoran", dist: "Stevenson", h26: 574, h25: 621, h24: 552, p26: 39, p25: 41, p24: 33, raw: 588 },
-        { loc: "STV 22", ranch: "Corcoran", dist: "Stevenson", h26: 574, h25: 628, h24: 566, p26: 39, p25: 38, p24: 33, raw: 588 },
-        { loc: "STV 26D", ranch: "Corcoran", dist: "Stevenson", h26: 555, h25: 583, h24: 537, p26: 38, p25: 38, p24: 31, raw: 564 },
-        { loc: "STV 35", ranch: "Corcoran", dist: "Stevenson", h26: 552, h25: 584, h24: 511, p26: 36, p25: 41, p24: 31, raw: 560 },
-        { loc: "STV 2", ranch: "Corcoran", dist: "Stevenson", h26: 585, h25: 616, h24: 535, p26: 39, p25: 39, p24: 32, raw: 593 },
-        { loc: "STV 3", ranch: "Corcoran", dist: "Stevenson", h26: 590, h25: 631, h24: 533, p26: 38, p25: 38, p24: 31, raw: 601 },
-        { loc: "STV 4", ranch: "Corcoran", dist: "Stevenson", h26: 563, h25: 572, h24: 482, p26: 39, p25: 38, p24: 33, raw: 569 },
-        { loc: "HL 32 NW", ranch: "Corcoran", dist: "Homeland", h26: 573, h25: 589, h24: 488, p26: 39, p25: 41, p24: 36, raw: 575 },
-        { loc: "KL", ranch: "Kern", dist: "Kern Lake", h26: 528, h25: 607, h24: 519, p26: 38, p25: 36, p24: 33, raw: 541 },
-        { loc: "BV", ranch: "Kern", dist: "Buena Vista", h26: 596, h25: 614, h24: 546, p26: 39, p25: 38, p24: 31, raw: 618 }
-    ];
-
-    const varietyGoals = [
-        { name: "Kerman Female (Hrs)", target: 800, current: 573 },
-        { name: "Peters (Hrs)", target: 850, current: 573 },
-        { name: "Mateur (Portions)", target: 36, current: 38 },
-        { name: "Sirora (Portions)", target: 60, current: 38 }
-    ];
-
-    let historyChart = null;
-
-    function openTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        document.getElementById('tab-' + tabId).classList.add('active');
-        if(tabId === 'history') renderHistoryChart();
-        if(tabId === 'goals') renderGoals();
-    }
-
-    function updateDetails() {
-        const ranch = document.getElementById('ranchFilter').value;
-        const metric = document.getElementById('metricFilter').value;
-        const tbody = document.getElementById('detailsBody');
-        tbody.innerHTML = '';
-
-        const filtered = orchards.filter(o => ranch === "All" || o.ranch === ranch);
-        
-        filtered.forEach(o => {
-            const v26 = metric === 'hours' ? o.h26 : o.p26;
-            const v25 = metric === 'hours' ? o.h25 : o.p25;
-            const v24 = metric === 'hours' ? o.h24 : o.p24;
-            tbody.innerHTML += `<tr>
-                <td><strong>${o.loc}</strong></td><td>${v26}</td><td>${v25}</td><td>${v24}</td>
-                <td>${Math.round((v26/v25)*100)}%</td><td>${o.raw}</td>
-            </tr>`;
+    <script>
+        // Tab logic
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab, .tab-content').forEach(el => el.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
         });
-    }
 
-    function renderHistoryChart() {
-        const ctx = document.getElementById('historyChart').getContext('2d');
-        if (historyChart) historyChart.destroy();
-        historyChart = new Chart(ctx, {
+        // Charts
+        const ctx1 = document.getElementById('districtChart').getContext('2d');
+        new Chart(ctx1, {
             type: 'bar',
             data: {
-                labels: orchards.map(o => o.loc),
-                datasets: [
-                    { label: '2025-26 Current', data: orchards.map(o => o.h26), backgroundColor: '#4c7c5c' },
-                    { label: '2024-25 Historic', data: orchards.map(o => o.h25), backgroundColor: '#97bc62' }
-                ]
+                labels: ['STV', 'Homeland', 'Kern Lake', 'Buena Vista'],
+                datasets: [{ label: 'Chill Hours', data: [573, 573, 528, 596], backgroundColor: ['#4a7c59', '#c4a35a', '#b5614f', '#5a7c9b'] }]
             },
-            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            options: { responsive: true, maintainAspectRatio: false }
         });
-    }
 
-    function renderGoals() {
-        const container = document.getElementById('goalList');
-        container.innerHTML = '';
-        varietyGoals.forEach(g => {
-            const pct = Math.min(Math.round((g.current / g.target) * 100), 100);
-            container.innerHTML += `
-                <div style="margin-bottom: 25px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9em;">
-                        <span><strong>${g.name}</strong> (Goal: ${g.target})</span>
-                        <span>${pct}%</span>
-                    </div>
-                    <div class="progress-bg"><div class="progress-fill" style="width:${pct}%"></div></div>
-                </div>
-            `;
+        const ctx2 = document.getElementById('portionsChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: ['STV', 'Homeland', 'Kern Lake', 'Buena Vista'],
+                datasets: [{ label: 'Portions', data: [38, 39, 38, 39], backgroundColor: '#6b9b7a' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
         });
-    }
 
-    async function exportPDF() {
-        const element = document.getElementById('dashboard-body');
-        const opt = {
-            margin:       0.5,
-            filename:     'Chill_Report_Jan_11_2026.pdf',
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-
-        // Temporary UI cleanup for export
-        const controls = document.querySelectorAll('.tabs-header, .controls, .btn-export');
-        controls.forEach(c => c.style.display = 'none');
-        
-        // Ensure all data is visible in the report
-        document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'block');
-
-        try {
-            await html2pdf().set(opt).from(element).save();
-        } finally {
-            // Restore UI
-            controls.forEach(c => c.style.display = '');
-            document.querySelectorAll('.tab-content').forEach((t, i) => {
-                if (!t.classList.contains('active')) t.style.display = 'none';
-            });
-        }
-    }
-
-    // Initialize
-    updateDetails();
-</script>
+        // Goals Table Generator
+        const goals = [
+            { name: 'STV 28', hrs: 569, pct: 71 },
+            { name: 'KL', hrs: 528, pct: 66 },
+            { name: 'BV', hrs: 596, pct: 75 }
+        ];
+        const tbody = document.getElementById('goalsTableBody');
+        goals.forEach(g => {
+            const color = g.pct > 70 ? 'green' : 'gold';
+            tbody.innerHTML += `<tr><td>${g.name}</td><td>${g.hrs}</td><td>
+                <div class="progress-bar"><div class="progress-fill ${color}" style="width:${g.pct}%"></div></div>
+            </td></tr>`;
+        });
+    </script>
 </body>
 </html>
