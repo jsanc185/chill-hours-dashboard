@@ -3,370 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chill Hours & Portions Dashboard (2026)</title>
+    <title>Chill Data Dashboard (2026 Comparison)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --primary: #2c5f2d;
-            --secondary: #97bc62;
-            --bg: #f4f7f6;
-            --text: #333;
-            --white: #fff;
-            --border: #ddd;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        h1 { color: var(--primary); margin-bottom: 5px; }
-        p.subtitle { color: #666; font-size: 0.9em; }
-
-        /* Controls */
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
-            background-color: #ddd;
-            color: #555;
-        }
-
-        .btn.active {
-            background-color: var(--primary);
-            color: var(--white);
-        }
-
-        /* Dashboard Grid */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-
-        /* Card Styles */
-        .card {
-            background: var(--white);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
-        /* Table Styles */
-        .table-responsive {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 0.95em;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-        }
-
-        th {
-            background-color: var(--primary);
-            color: var(--white);
-            cursor: pointer;
-            user-select: none;
-        }
-
-        th:hover {
-            background-color: #1e4220;
-        }
-
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-
-        .progress-bar {
-            height: 8px;
-            background-color: #eee;
-            border-radius: 4px;
-            overflow: hidden;
-            width: 100px;
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 8px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background-color: var(--secondary);
-        }
-
-        footer {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 0.8em;
-            color: #777;
-        }
-
-        /* Reference Info Box */
-        .ref-box {
-            margin-top: 20px;
-            background-color: #e8f5e9;
-            padding: 15px;
-            border-radius: 5px;
-            border-left: 5px solid var(--primary);
-        }
+        :root { --primary: #2c5f2d; --secondary: #97bc62; --bg: #f4f7f6; --text: #333; --white: #fff; --border: #ddd; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 20px; }
+        .controls-row { display: flex; justify-content: center; align-items: center; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn-group { display: flex; gap: 5px; }
+        .btn { padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; background-color: #ddd; }
+        .btn.active { background-color: var(--primary); color: var(--white); }
+        select { padding: 8px; border-radius: 5px; border: 1px solid var(--border); font-size: 14px; cursor: pointer; }
+        .card { background: var(--white); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background-color: var(--primary); color: var(--white); }
+        .progress-bar { height: 8px; background-color: #eee; border-radius: 4px; width: 80px; display: inline-block; margin-right: 5px; }
+        .progress-fill { height: 100%; background-color: var(--secondary); border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>Pistachio Chill Data Dashboard</h1>
-        <p class="subtitle">Data Date: Jan 11, 2026 | Comparing Current (2026) vs (2025)</p>
+        <h1>District Chill Comparison</h1>
+        <p>Current Date: Jan 11, 2026</p>
     </header>
 
-    <div class="controls">
-        <button class="btn active" onclick="setMode('hours')">Chill Hours</button>
-        <button class="btn" onclick="setMode('portions')">Chill Portions</button>
-    </div>
-
-    <div class="dashboard-grid">
-        <div class="card">
-            <canvas id="mainChart" height="100"></canvas>
+    <div class="controls-row">
+        <div class="btn-group">
+            <button class="btn active" id="btn-hours" onclick="setMetric('hours')">Chill Hours</button>
+            <button class="btn" id="btn-portions" onclick="setMetric('portions')">Chill Portions</button>
         </div>
-
-        <div class="card table-responsive">
-            <h3 id="tableTitle">Detailed Data: Chill Hours</h3>
-            <table id="dataTable">
-                <thead>
-                    <tr>
-                        <th onclick="sortTable(0)">Location</th>
-                        <th onclick="sortTable(1)">Current (2026)</th>
-                        <th onclick="sortTable(2)">Historic (2025)</th>
-                        <th onclick="sortTable(3)">Historic (2024)</th>
-                        <th onclick="sortTable(4)">% of 2025</th>
-                        <th onclick="sortTable(5)">Goal Progress (F. Kerm)</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    </tbody>
-            </table>
-        </div>
-
-        <div class="ref-box">
-            <strong>Goals Reference[cite: 12, 14, 16]:</strong><br>
-            <em>Chill Hours:</em> Male Kerm (900), Female Kerm (800), Male GH (800).<br>
-            <em>Chill Portions:</em> Male Kerm (65), Female Kerm (58).
+        
+        <div>
+            <label for="yearSelect"><strong>Compare Against:</strong></label>
+            <select id="yearSelect" onchange="setHistoricYear(this.value)">
+                <option value="2025">Historic 2025 (Previous Year)</option>
+                <option value="2024">Historic 2024 (2 Years Ago)</option>
+            </select>
         </div>
     </div>
 
-    <footer>
-        Source: Chill Hours Data 1.11.2026.pdf [cite: 1, 12, 16]
-    </footer>
+    <div class="card">
+        <canvas id="mainChart" height="100"></canvas>
+    </div>
+
+    <div class="card">
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>Location</th>
+                    <th>2026 Current</th>
+                    <th id="historicHeader">2025 Historic</th>
+                    <th>% of Historic</th>
+                    <th>Goal Progress (F. Kerm)</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
 </div>
 
 <script>
-    // Data parsed from Sources 12 (Hours) and 16 (Portions)
-    const rawData = [
-        { loc: "STV 28",    h_cur: 569, h_25: 607, h_24: 542, h_pct: 94,  p_cur: 39, p_25: 41, p_24: 33, p_pct: 96 },
-        { loc: "STV 27 SW", h_cur: 596, h_25: 663, h_24: 591, h_pct: 90,  p_cur: 37, p_25: 38, p_24: 34, p_pct: 96 },
-        { loc: "STV 27 SE", h_cur: 568, h_25: 628, h_24: 555, h_pct: 90,  p_cur: 38, p_25: 39, p_24: 32, p_pct: 99 },
-        { loc: "STV 27 NE", h_cur: 574, h_25: 621, h_24: 552, h_pct: 92,  p_cur: 39, p_25: 41, p_24: 33, p_pct: 95 },
-        { loc: "STV 22",    h_cur: 574, h_25: 628, h_24: 566, h_pct: 91,  p_cur: 39, p_25: 38, p_24: 33, p_pct: 104 },
-        { loc: "STV 26D",   h_cur: 555, h_25: 583, h_24: 537, h_pct: 95,  p_cur: 38, p_25: 38, p_24: 31, p_pct: 101 },
-        { loc: "STV 35",    h_cur: 552, h_25: 584, h_24: 511, h_pct: 95,  p_cur: 36, p_25: 41, p_24: 31, p_pct: 88 },
-        { loc: "STV 2",     h_cur: 585, h_25: 616, h_24: 535, h_pct: 95,  p_cur: 39, p_25: 39, p_24: 32, p_pct: 100 },
-        { loc: "STV 3",     h_cur: 590, h_25: 631, h_24: 533, h_pct: 94,  p_cur: 38, p_25: 38, p_24: 31, p_pct: 99 },
-        { loc: "STV 4",     h_cur: 563, h_25: 572, h_24: 482, h_pct: 98,  p_cur: 39, p_25: 38, p_24: 33, p_pct: 101 },
-        { loc: "HL 32 NW",  h_cur: 573, h_25: 589, h_24: 488, h_pct: 97,  p_cur: 39, p_25: 41, p_24: 36, p_pct: 95 },
-        { loc: "KL",        h_cur: 528, h_25: 607, h_24: 519, h_pct: 87,  p_cur: 38, p_25: 36, p_24: 33, p_pct: 105 },
-        { loc: "BV",        h_cur: 596, h_25: 614, h_24: 546, h_pct: 97,  p_cur: 39, p_25: 38, p_24: 31, p_pct: 104 }
+    // Data sourced from PDF 
+    const data = [
+        { loc: "STV 28", h26: 569, h25: 607, h24: 542, p26: 39, p25: 41, p24: 33 },
+        { loc: "STV 27 SW", h26: 596, h25: 663, h24: 591, p26: 37, p25: 38, p24: 34 },
+        { loc: "STV 27 SE", h26: 568, h25: 628, h24: 555, p26: 38, p25: 39, p24: 32 },
+        { loc: "STV 27 NE", h26: 574, h25: 621, h24: 552, p26: 39, p25: 41, p24: 33 },
+        { loc: "STV 22", h26: 574, h25: 628, h24: 566, p26: 39, p25: 38, p24: 33 },
+        { loc: "STV 26D", h26: 555, h25: 583, h24: 537, p26: 38, p25: 38, p24: 31 },
+        { loc: "STV 35", h26: 552, h25: 584, h24: 511, p26: 36, p25: 41, p24: 31 },
+        { loc: "STV 2", h26: 585, h25: 616, h24: 535, p26: 39, p25: 39, p24: 32 },
+        { loc: "STV 3", h26: 590, h25: 631, h24: 533, p26: 38, p25: 38, p24: 31 },
+        { loc: "STV 4", h26: 563, h25: 572, h24: 482, p26: 39, p25: 38, p24: 33 },
+        { loc: "HL 32 NW", h26: 573, h25: 589, h24: 488, p26: 39, p25: 41, p24: 36 },
+        { loc: "KL", h26: 528, h25: 607, h24: 519, p26: 38, p25: 36, p24: 33 },
+        { loc: "BV", h26: 596, h25: 614, h24: 546, p26: 39, p25: 38, p24: 31 }
     ];
 
-    // Goals for calculation (Female Kerm)
-    const GOAL_HOURS = 800;
-    const GOAL_PORTIONS = 58;
+    let currentMetric = 'hours'; // hours or portions
+    let historicYear = '2025';
+    let chartObj = null;
 
-    let currentMode = 'hours';
-    let chartInstance = null;
-
-    function setMode(mode) {
-        currentMode = mode;
-        
-        // Update Buttons
-        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
-        event.target.classList.add('active');
-        
-        // Update Title
-        document.getElementById('tableTitle').innerText = 
-            mode === 'hours' ? 'Detailed Data: Chill Hours' : 'Detailed Data: Chill Portions';
-
-        renderTable();
-        renderChart();
+    function setMetric(m) {
+        currentMetric = m;
+        document.getElementById('btn-hours').classList.toggle('active', m === 'hours');
+        document.getElementById('btn-portions').classList.toggle('active', m === 'portions');
+        updateUI();
     }
 
-    function renderTable() {
+    function setHistoricYear(y) {
+        historicYear = y;
+        updateUI();
+    }
+
+    function updateUI() {
+        const histLabel = historicYear + " Historic";
+        document.getElementById('historicHeader').innerText = histLabel;
+        
+        const goalVal = currentMetric === 'hours' ? 800 : 58; // Female Kerman goals 
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
 
-        rawData.forEach(row => {
-            const tr = document.createElement('tr');
-            
-            // Determine keys based on mode
-            const cur = currentMode === 'hours' ? row.h_cur : row.p_cur;
-            const h25 = currentMode === 'hours' ? row.h_25 : row.p_25;
-            const h24 = currentMode === 'hours' ? row.h_24 : row.p_24;
-            const pct = currentMode === 'hours' ? row.h_pct : row.p_pct;
-            const goal = currentMode === 'hours' ? GOAL_HOURS : GOAL_PORTIONS;
-            
-            // Calculate goal %
-            const goalPct = Math.round((cur / goal) * 100);
-            const goalColor = goalPct >= 100 ? '#2c5f2d' : '#97bc62';
+        const chartLabels = [];
+        const chartCur = [];
+        const chartHist = [];
 
-            tr.innerHTML = `
-                <td><strong>${row.loc}</strong></td>
+        data.forEach(d => {
+            const cur = currentMetric === 'hours' ? d.h26 : d.p26;
+            const hist = currentMetric === 'hours' ? (historicYear === '2025' ? d.h25 : d.h24) : (historicYear === '2025' ? d.p25 : d.p24);
+            
+            const pctOfHist = Math.round((cur / hist) * 100);
+            const pctOfGoal = Math.round((cur / goalVal) * 100);
+
+            const row = `<tr>
+                <td><strong>${d.loc}</strong></td>
                 <td>${cur}</td>
-                <td>${h25}</td>
-                <td>${h24}</td>
-                <td>${pct}%</td>
+                <td>${hist}</td>
+                <td>${pctOfHist}%</td>
                 <td>
-                    <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(goalPct, 100)}%; background-color:${goalColor}"></div></div>
-                    ${goalPct}%
+                    <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(pctOfGoal, 100)}%"></div></div>
+                    ${pctOfGoal}%
                 </td>
-            `;
-            tbody.appendChild(tr);
+            </tr>`;
+            tbody.innerHTML += row;
+
+            chartLabels.push(d.loc);
+            chartCur.push(cur);
+            chartHist.push(hist);
         });
+
+        renderChart(chartLabels, chartCur, chartHist, histLabel);
     }
 
-    function renderChart() {
+    function renderChart(labels, cur, hist, histLabel) {
         const ctx = document.getElementById('mainChart').getContext('2d');
-        
-        const labels = rawData.map(d => d.loc);
-        const currentData = rawData.map(d => currentMode === 'hours' ? d.h_cur : d.p_cur);
-        const historicData = rawData.map(d => currentMode === 'hours' ? d.h_25 : d.p_25);
-
-        if (chartInstance) {
-            chartInstance.destroy();
-        }
-
-        chartInstance = new Chart(ctx, {
+        if (chartObj) chartObj.destroy();
+        chartObj = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [
-                    {
-                        label: 'Current (2026)',
-                        data: currentData,
-                        backgroundColor: '#2c5f2d',
-                        borderColor: '#1e4220',
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Historic (2025)',
-                        data: historicData,
-                        backgroundColor: '#97bc62',
-                        borderColor: '#7a9c4b',
-                        borderWidth: 1
-                    }
+                    { label: '2026 Current', data: cur, backgroundColor: '#2c5f2d' },
+                    { label: histLabel, data: hist, backgroundColor: '#97bc62' }
                 ]
             },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: currentMode === 'hours' ? 'Chill Hours Comparison' : 'Chill Portions Comparison'
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: currentMode === 'hours' ? 'Hours (< 45°F)' : 'Portions'
-                        }
-                    }
-                }
-            }
+            options: { responsive: true, scales: { y: { beginAtZero: true } } }
         });
     }
 
-    // Simple sorting function
-    function sortTable(n) {
-        var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-        table = document.getElementById("dataTable");
-        switching = true;
-        dir = "asc"; 
-        
-        while (switching) {
-            switching = false;
-            rows = table.rows;
-            for (i = 1; i < (rows.length - 1); i++) {
-                shouldSwitch = false;
-                x = rows[i].getElementsByTagName("TD")[n];
-                y = rows[i + 1].getElementsByTagName("TD")[n];
-                
-                // Parse numbers for sorting if possible
-                let xContent = x.innerHTML.replace(/%|<strong>|<\/strong>/g, "");
-                let yContent = y.innerHTML.replace(/%|<strong>|<\/strong>/g, "");
-                
-                // Check if sorting by progress bar column (last column)
-                if(n === 5) {
-                    xContent = x.innerText.replace("%", "").trim();
-                    yContent = y.innerText.replace("%", "").trim();
-                }
-
-                let xVal = isNaN(xContent) ? xContent.toLowerCase() : parseFloat(xContent);
-                let yVal = isNaN(yContent) ? yContent.toLowerCase() : parseFloat(yContent);
-
-                if (dir == "asc") {
-                    if (xVal > yVal) { shouldSwitch = true; break; }
-                } else if (dir == "desc") {
-                    if (xVal < yVal) { shouldSwitch = true; break; }
-                }
-            }
-            if (shouldSwitch) {
-                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                switching = true;
-                switchcount ++;      
-            } else {
-                if (switchcount == 0 && dir == "asc") {
-                    dir = "desc";
-                    switching = true;
-                }
-            }
-        }
-    }
-
-    // Initial Render
-    renderTable();
-    renderChart();
-
+    updateUI();
 </script>
 </body>
-
 </html>
