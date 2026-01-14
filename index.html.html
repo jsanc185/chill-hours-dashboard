@@ -3,210 +3,397 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orchard Chill Dashboard - Multi-Year Comparison</title>
+    <title>Chill Accumulation Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Lora:wght@700&display=swap" rel="stylesheet">
+    
     <style>
-        :root { --primary: #2c5f2d; --secondary: #97bc62; --accent: #3498db; --bg: #f4f7f6; --text: #333; --white: #fff; --border: #ddd; --avg-bg: #e8f5e9; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        header { text-align: center; margin-bottom: 20px; }
-        
-        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .filter-item { display: flex; flex-direction: column; gap: 5px; }
-        
-        .btn-group { display: flex; gap: 5px; margin-bottom: 20 - px; justify-content: center; padding-bottom: 20px;}
-        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; background-color: #ddd; }
-        .btn.active { background-color: var(--primary); color: var(--white); }
-        
-        select { padding: 8px; border-radius: 5px; border: 1px solid var(--border); }
-        .card { background: var(--white); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        
-        .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.85em; min-width: 800px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); }
-        th { background-color: var(--primary); color: var(--white); position: sticky; top: 0; }
-        
-        tr.avg-row { background-color: var(--avg-bg); font-weight: bold; border-top: 2px solid var(--primary); }
-        .progress-bar { height: 8px; background-color: #eee; border-radius: 4px; width: 50px; display: inline-block; margin-right: 5px; }
-        .progress-fill { height: 100%; background-color: var(--secondary); border-radius: 4px; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <header>
-        <h1>District & Ranch Chill Analysis</h1>
-        <p>Comparison of 2026 Current vs Historic Datasets</p>
-    </header>
-
-    <div class="btn-group">
-        <button class="btn active" id="btn-hours" onclick="setMetric('hours')">Chill Hours</button>
-        <button class="btn" id="btn-portions" onclick="setMetric('portions')">Chill Portions</button>
-    </div>
-
-    <div class="filter-grid">
-        <div class="filter-item">
-            <label><strong>Ranch:</strong></label>
-            <select id="ranchSelect" onchange="handleRanchChange(this.value)">
-                <option value="All">All Ranches</option>
-                <option value="Corcoran">Corcoran (Stevenson/Homeland)</option>
-                <option value="Kern">Kern (BV/Kern Lake)</option>
-            </select>
-        </div>
-        <div class="filter-item">
-            <label><strong>District:</strong></label>
-            <select id="districtSelect" onchange="updateUI()">
-                <option value="All">All Districts</option>
-                <option value="Stevenson">Stevenson</option>
-                <option value="Homeland">Homeland</option>
-                <option value="Buena Vista">Buena Vista</option>
-                <option value="Kern Lake">Kern Lake</option>
-            </select>
-        </div>
-        <div class="filter-item">
-            <label><strong>Comparison View:</strong></label>
-            <select id="yearSelect" onchange="updateUI()">
-                <option value="All">All Years Together</option>
-                <option value="2025">vs 2025 Historic Only</option>
-                <option value="2024">vs 2024 Historic Only</option>
-            </select>
-        </div>
-    </div>
-
-    <div class="card">
-        <canvas id="mainChart" height="100"></canvas>
-    </div>
-
-    <div class="card table-responsive">
-        <table id="dataTable">
-            <thead id="tableHeader"></thead>
-            <tbody id="tableBody"></tbody>
-        </table>
-    </div>
-</div>
-
-<script>
-    const orchards = [
-        { loc: "STV 28", ranch: "Corcoran", dist: "Stevenson", h26: 569, h25: 607, h24: 542, p26: 39, p25: 41, p24: 33 },
-        { loc: "STV 27 SW", ranch: "Corcoran", dist: "Stevenson", h26: 596, h25: 663, h24: 591, p26: 37, p25: 38, p24: 34 },
-        { loc: "STV 27 SE", ranch: "Corcoran", dist: "Stevenson", h26: 568, h25: 628, h24: 555, p26: 38, p25: 39, p24: 32 },
-        { loc: "STV 27 NE", ranch: "Corcoran", dist: "Stevenson", h26: 574, h25: 621, h24: 552, p26: 39, p25: 41, p24: 33 },
-        { loc: "STV 22", ranch: "Corcoran", dist: "Stevenson", h26: 574, h25: 628, h24: 566, p26: 39, p25: 38, p24: 33 },
-        { loc: "STV 26D", ranch: "Corcoran", dist: "Stevenson", h26: 555, h25: 583, h24: 537, p26: 38, p25: 38, p24: 31 },
-        { loc: "STV 35", ranch: "Corcoran", dist: "Stevenson", h26: 552, h25: 584, h24: 511, p26: 36, p25: 41, p24: 31 },
-        { loc: "STV 2", ranch: "Corcoran", dist: "Stevenson", h26: 585, h25: 616, h24: 535, p26: 39, p25: 39, p24: 32 },
-        { loc: "STV 3", ranch: "Corcoran", dist: "Stevenson", h26: 590, h25: 631, h24: 533, p26: 38, p25: 38, p24: 31 },
-        { loc: "STV 4", ranch: "Corcoran", dist: "Stevenson", h26: 563, h25: 572, h24: 482, p26: 39, p25: 38, p24: 33 },
-        { loc: "HL 32 NW", ranch: "Corcoran", dist: "Homeland", h26: 573, h25: 589, h24: 488, p26: 39, p25: 41, p24: 36 },
-        { loc: "KL", ranch: "Kern", dist: "Kern Lake", h26: 528, h25: 607, h24: 519, p26: 38, p25: 36, p24: 33 },
-        { loc: "BV", ranch: "Kern", dist: "Buena Vista", h26: 596, h25: 614, h24: 546, p26: 39, p25: 38, p24: 31 }
-    ];
-
-    let currentMetric = 'hours';
-    let chartObj = null;
-
-    function handleRanchChange(ranch) {
-        const distSelect = document.getElementById('districtSelect');
-        distSelect.value = "All";
-        Array.from(distSelect.options).forEach(opt => {
-            if (opt.value === "All") opt.hidden = false;
-            else if (ranch === "Corcoran") opt.hidden = !["Stevenson", "Homeland"].includes(opt.value);
-            else if (ranch === "Kern") opt.hidden = !["Buena Vista", "Kern Lake"].includes(opt.value);
-            else opt.hidden = false;
-        });
-        updateUI();
-    }
-
-    function setMetric(m) {
-        currentMetric = m;
-        document.getElementById('btn-hours').classList.toggle('active', m === 'hours');
-        document.getElementById('btn-portions').classList.toggle('active', m === 'portions');
-        updateUI();
-    }
-
-    function updateUI() {
-        const ranch = document.getElementById('ranchSelect').value;
-        const dist = document.getElementById('districtSelect').value;
-        const view = document.getElementById('yearSelect').value;
-        const goalVal = currentMetric === 'hours' ? 800 : 58;
-
-        const filtered = orchards.filter(o => 
-            (ranch === "All" || o.ranch === ranch) && 
-            (dist === "All" || o.dist === dist)
-        );
-
-        // Update Headers
-        const header = document.getElementById('tableHeader');
-        if (view === "All") {
-            header.innerHTML = `<tr><th>Location</th><th>District</th><th>26 Cur</th><th>25 Hist</th><th>24 Hist</th><th>% '25</th><th>% '24</th><th>Goal Progress</th></tr>`;
-        } else {
-            header.innerHTML = `<tr><th>Location</th><th>District</th><th>26 Cur</th><th>${view} Hist</th><th>% vs ${view}</th><th>Goal Progress</th></tr>`;
+        :root {
+            --primary-green: #4c7c5c;
+            --dark-green: #355e3b;
+            --light-bg: #f5f7f5;
+            --white: #ffffff;
+            --text-main: #333333;
+            --text-secondary: #666666;
+            --border: #e0e0e0;
         }
 
-        const tbody = document.getElementById('tableBody');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--light-bg);
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        /* Header Section */
+        .header-bg {
+            background-color: var(--primary-green);
+            color: var(--white);
+            padding: 40px 20px 100px 20px;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .header-container h1 {
+            font-family: 'Lora', serif;
+            font-size: 32px;
+            margin: 10px 0;
+        }
+
+        .header-meta {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .header-actions {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .date-pill {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+        }
+
+        .btn-export {
+            background: var(--white);
+            color: var(--primary-green);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+
+        .btn-export:hover { background: #f0f0f0; transform: translateY(-1px); }
+
+        /* Metric Cards */
+        .metrics-grid {
+            max-width: 1200px;
+            margin: -60px auto 30px auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 0 20px;
+        }
+
+        .metric-card {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+            font-size: 0.75em;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-family: 'Lora', serif;
+            font-size: 28px;
+            color: var(--dark-green);
+            margin: 10px 0;
+        }
+
+        .metric-trend {
+            font-size: 0.85em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .trend-down { color: #d32f2f; }
+        .trend-up { color: #388e3c; }
+
+        /* Tabs Section */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 40px 20px;
+        }
+
+        .tabs-header {
+            display: flex;
+            gap: 30px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 25px;
+        }
+
+        .tab-btn {
+            padding: 12px 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 3px solid transparent;
+            font-size: 0.95em;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-green);
+            border-bottom-color: var(--primary-green);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* UI Elements */
+        .controls { margin-bottom: 20px; display: flex; gap: 15px; }
+        select { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); font-family: inherit; }
+        
+        .card { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px; background: #f8f9f8; color: var(--text-secondary); font-size: 0.8em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        td { padding: 15px; border-bottom: 1px solid #f1f1f1; font-size: 0.95em; }
+
+        .progress-bg { height: 8px; background: #eee; border-radius: 4px; flex-grow: 1; }
+        .progress-fill { height: 100%; background: var(--primary-green); border-radius: 4px; }
+
+        /* PDF Export Styles */
+        @media print {
+            .tabs-header, .controls, .btn-export { display: none !important; }
+            .tab-content { display: block !important; page-break-inside: avoid; }
+            .metric-card { box-shadow: none; border: 1px solid #eee; }
+        }
+    </style>
+</head>
+<body id="dashboard-body">
+
+    <div class="header-bg">
+        <div class="header-container">
+            <div class="header-meta">Chill Hours Monitor</div>
+            <h1>Chill Accumulation Dashboard</h1>
+            <div class="header-meta">Season 2025-2026 • Tracking hours 32-45°F for optimal dormancy</div>
+            
+            <div class="header-actions">
+                <div class="date-pill">📅 January 11, 2026</div>
+                <button class="btn-export" onclick="exportPDF()">📥 Download PDF Report</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-label">Avg. STV All Districts</div>
+            <div class="metric-value">573</div>
+            <div class="metric-trend trend-down">▼ 7% vs 2024</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Chill Portions Avg</div>
+            <div class="metric-value">38</div>
+            <div class="metric-trend trend-down">▼ 3% vs 2024</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Best Performer</div>
+            <div class="metric-value">Buena Vista</div>
+            <div class="metric-trend trend-up">▲ 596 hrs</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Goal Progress</div>
+            <div class="metric-value">72%</div>
+            <div class="metric-trend">Kerman Female</div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="tabs-header">
+            <button class="tab-btn active" id="tab-overview" onclick="openTab('overview')">Overview</button>
+            <button class="tab-btn" id="tab-details" onclick="openTab('details')">Station Details</button>
+            <button class="tab-btn" id="tab-history" onclick="openTab('history')">Historical Comparison</button>
+            <button class="tab-btn" id="tab-goals" onclick="openTab('goals')">Goal Tracking</button>
+        </div>
+
+        <div id="overview" class="tab-content active">
+            <div class="card">
+                <h3>District Summaries [Source: 13]</h3>
+                <table>
+                    <thead>
+                        <tr><th>District</th><th>Avg Chill Hours</th><th>Avg Chill Portions</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Stevenson All</td><td>573</td><td>38</td></tr>
+                        <tr><td>Homeland</td><td>573</td><td>39</td></tr>
+                        <tr><td>Kern Lake</td><td>528</td><td>38</td></tr>
+                        <tr><td>Buena Vista</td><td>596</td><td>39</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="details" class="tab-content">
+            <div class="controls">
+                <select id="ranchFilter" onchange="updateDetails()">
+                    <option value="All">All Ranches</option>
+                    <option value="Corcoran">Corcoran</option>
+                    <option value="Kern">Kern</option>
+                </select>
+                <select id="metricFilter" onchange="updateDetails()">
+                    <option value="hours">Chill Hours</option>
+                    <option value="portions">Chill Portions</option>
+                </select>
+            </div>
+            <div class="card">
+                <table id="detailsTable">
+                    <thead>
+                        <tr><th>Station</th><th>2025-26</th><th>2024-25</th><th>2023-24</th><th>% vs 2025</th><th>Hrs < 45°F</th></tr>
+                    </thead>
+                    <tbody id="detailsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="history" class="tab-content">
+            <div class="card">
+                <canvas id="historyChart" height="100"></canvas>
+            </div>
+        </div>
+
+        <div id="goals" class="tab-content">
+            <div class="card">
+                <h3>Benchmark Progress (Variety Goals) [Source: 14]</h3>
+                <div id="goalList"></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Data sourced from PDF sources [12, 13, 16]
+    const orchards = [
+        { loc: "STV 28", ranch: "Corcoran", dist: "Stevenson", h26: 569, h25: 607, h24: 542, p26: 39, p25: 41, p24: 33, raw: 576 },
+        { loc: "STV 27 SW", ranch: "Corcoran", dist: "Stevenson", h26: 596, h25: 663, h24: 591, p26: 37, p25: 38, p24: 34, raw: 609 },
+        { loc: "STV 27 SE", ranch: "Corcoran", dist: "Stevenson", h26: 568, h25: 628, h24: 555, p26: 38, p25: 39, p24: 32, raw: 586 },
+        { loc: "STV 27 NE", ranch: "Corcoran", dist: "Stevenson", h26: 574, h25: 621, h24: 552, p26: 39, p25: 41, p24: 33, raw: 588 },
+        { loc: "STV 22", ranch: "Corcoran", dist: "Stevenson", h26: 574, h25: 628, h24: 566, p26: 39, p25: 38, p24: 33, raw: 588 },
+        { loc: "STV 26D", ranch: "Corcoran", dist: "Stevenson", h26: 555, h25: 583, h24: 537, p26: 38, p25: 38, p24: 31, raw: 564 },
+        { loc: "STV 35", ranch: "Corcoran", dist: "Stevenson", h26: 552, h25: 584, h24: 511, p26: 36, p25: 41, p24: 31, raw: 560 },
+        { loc: "STV 2", ranch: "Corcoran", dist: "Stevenson", h26: 585, h25: 616, h24: 535, p26: 39, p25: 39, p24: 32, raw: 593 },
+        { loc: "STV 3", ranch: "Corcoran", dist: "Stevenson", h26: 590, h25: 631, h24: 533, p26: 38, p25: 38, p24: 31, raw: 601 },
+        { loc: "STV 4", ranch: "Corcoran", dist: "Stevenson", h26: 563, h25: 572, h24: 482, p26: 39, p25: 38, p24: 33, raw: 569 },
+        { loc: "HL 32 NW", ranch: "Corcoran", dist: "Homeland", h26: 573, h25: 589, h24: 488, p26: 39, p25: 41, p24: 36, raw: 575 },
+        { loc: "KL", ranch: "Kern", dist: "Kern Lake", h26: 528, h25: 607, h24: 519, p26: 38, p25: 36, p24: 33, raw: 541 },
+        { loc: "BV", ranch: "Kern", dist: "Buena Vista", h26: 596, h25: 614, h24: 546, p26: 39, p25: 38, p24: 31, raw: 618 }
+    ];
+
+    const varietyGoals = [
+        { name: "Kerman Female (Hrs)", target: 800, current: 573 },
+        { name: "Peters (Hrs)", target: 850, current: 573 },
+        { name: "Mateur (Portions)", target: 36, current: 38 },
+        { name: "Sirora (Portions)", target: 60, current: 38 }
+    ];
+
+    let historyChart = null;
+
+    function openTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        document.getElementById('tab-' + tabId).classList.add('active');
+        if(tabId === 'history') renderHistoryChart();
+        if(tabId === 'goals') renderGoals();
+    }
+
+    function updateDetails() {
+        const ranch = document.getElementById('ranchFilter').value;
+        const metric = document.getElementById('metricFilter').value;
+        const tbody = document.getElementById('detailsBody');
         tbody.innerHTML = '';
-        const labels = [], c26 = [], c25 = [], c24 = [];
 
-        const groups = filtered.reduce((acc, obj) => { (acc[obj.dist] = acc[obj.dist] || []).push(obj); return acc; }, {});
-
-        Object.keys(groups).forEach(districtName => {
-            const districtOrchards = groups[districtName];
-            let s26=0, s25=0, s24=0;
-
-            districtOrchards.forEach(o => {
-                const v26 = currentMetric === 'hours' ? o.h26 : o.p26;
-                const v25 = currentMetric === 'hours' ? o.h25 : o.p25;
-                const v24 = currentMetric === 'hours' ? o.h24 : o.p24;
-                s26 += v26; s25 += v25; s24 += v24;
-
-                const goalPct = Math.round((v26/goalVal)*100);
-                
-                let rowHtml = `<td>${o.loc}</td><td>${o.dist}</td><td>${v26}</td>`;
-                if (view === "All") {
-                    rowHtml += `<td>${v25}</td><td>${v24}</td><td>${Math.round((v26/v25)*100)}%</td><td>${Math.round((v26/v24)*100)}%</td>`;
-                } else if (view === "2025") {
-                    rowHtml += `<td>${v25}</td><td>${Math.round((v26/v25)*100)}%</td>`;
-                } else {
-                    rowHtml += `<td>${v24}</td><td>${Math.round((v26/v24)*100)}%</td>`;
-                }
-                rowHtml += `<td><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(goalPct,100)}%"></div></div> ${goalPct}%</td>`;
-                tbody.innerHTML += `<tr>${rowHtml}</tr>`;
-
-                labels.push(o.loc);
-                c26.push(v26); c25.push(v25); c24.push(v24);
-            });
-
-            // Average Row
-            const len = districtOrchards.length;
-            const a26 = Math.round((s26/len)*10)/10, a25 = Math.round((s25/len)*10)/10, a24 = Math.round((s24/len)*10)/10;
-            const aGoal = Math.round((a26/goalVal)*100);
-
-            let avgHtml = `<td>${districtName} AVG</td><td>${districtName}</td><td>${a26}</td>`;
-            if (view === "All") {
-                avgHtml += `<td>${a25}</td><td>${a24}</td><td>${Math.round((a26/a25)*100)}%</td><td>${Math.round((a26/a24)*100)}%</td>`;
-            } else if (view === "2025") {
-                avgHtml += `<td>${a25}</td><td>${Math.round((a26/a25)*100)}%</td>`;
-            } else {
-                avgHtml += `<td>${a24}</td><td>${Math.round((a26/a24)*100)}%</td>`;
-            }
-            avgHtml += `<td><div class="progress-bar"><div class="progress-fill" style="width:${Math.min(aGoal,100)}%"></div></div> ${aGoal}%</td>`;
-            tbody.innerHTML += `<tr class="avg-row">${avgHtml}</tr>`;
-        });
-
-        // Chart Update
-        if (chartObj) chartObj.destroy();
-        const datasets = [{ label: '2026 Current', data: c26, backgroundColor: '#2c5f2d' }];
-        if (view === "All" || view === "2025") datasets.push({ label: '2025 Historic', data: c25, backgroundColor: '#97bc62' });
-        if (view === "All" || view === "2024") datasets.push({ label: '2024 Historic', data: c24, backgroundColor: '#3498db' });
-
-        chartObj = new Chart(document.getElementById('mainChart').getContext('2d'), {
-            type: 'bar',
-            data: { labels: labels, datasets: datasets },
-            options: { responsive: true, plugins: { title: { display: true, text: 'Comparative Data: ' + (currentMetric === 'hours' ? 'Chill Hours' : 'Chill Portions') } } }
+        const filtered = orchards.filter(o => ranch === "All" || o.ranch === ranch);
+        
+        filtered.forEach(o => {
+            const v26 = metric === 'hours' ? o.h26 : o.p26;
+            const v25 = metric === 'hours' ? o.h25 : o.p25;
+            const v24 = metric === 'hours' ? o.h24 : o.p24;
+            tbody.innerHTML += `<tr>
+                <td><strong>${o.loc}</strong></td><td>${v26}</td><td>${v25}</td><td>${v24}</td>
+                <td>${Math.round((v26/v25)*100)}%</td><td>${o.raw}</td>
+            </tr>`;
         });
     }
 
-    updateUI();
+    function renderHistoryChart() {
+        const ctx = document.getElementById('historyChart').getContext('2d');
+        if (historyChart) historyChart.destroy();
+        historyChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: orchards.map(o => o.loc),
+                datasets: [
+                    { label: '2025-26 Current', data: orchards.map(o => o.h26), backgroundColor: '#4c7c5c' },
+                    { label: '2024-25 Historic', data: orchards.map(o => o.h25), backgroundColor: '#97bc62' }
+                ]
+            },
+            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        });
+    }
+
+    function renderGoals() {
+        const container = document.getElementById('goalList');
+        container.innerHTML = '';
+        varietyGoals.forEach(g => {
+            const pct = Math.min(Math.round((g.current / g.target) * 100), 100);
+            container.innerHTML += `
+                <div style="margin-bottom: 25px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9em;">
+                        <span><strong>${g.name}</strong> (Goal: ${g.target})</span>
+                        <span>${pct}%</span>
+                    </div>
+                    <div class="progress-bg"><div class="progress-fill" style="width:${pct}%"></div></div>
+                </div>
+            `;
+        });
+    }
+
+    async function exportPDF() {
+        const element = document.getElementById('dashboard-body');
+        const opt = {
+            margin:       0.5,
+            filename:     'Chill_Report_Jan_11_2026.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        // Temporary UI cleanup for export
+        const controls = document.querySelectorAll('.tabs-header, .controls, .btn-export');
+        controls.forEach(c => c.style.display = 'none');
+        
+        // Ensure all data is visible in the report
+        document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'block');
+
+        try {
+            await html2pdf().set(opt).from(element).save();
+        } finally {
+            // Restore UI
+            controls.forEach(c => c.style.display = '');
+            document.querySelectorAll('.tab-content').forEach((t, i) => {
+                if (!t.classList.contains('active')) t.style.display = 'none';
+            });
+        }
+    }
+
+    // Initialize
+    updateDetails();
 </script>
 </body>
 </html>
